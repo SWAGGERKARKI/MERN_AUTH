@@ -11,9 +11,11 @@ const app = express(); // create app instance
 const port = process.env.PORT || 4000; // assign port number
 connectDB(); // call function to connect database
 
+const allowedOrigin = ['http://localhost:5173'];
+
 app.use(express.json()); // json parse middleware
 app.use(cookieParser()); // cookie parser middleware
-app.use(cors({ credentials: true })); // cors middleware, allow to send cookies in response
+app.use(cors({ origin: allowedOrigin, credentials: true })); // cors middleware, allow to send cookies in response
 
 // API Endpoints
 app.get('/', (req, res) => {
