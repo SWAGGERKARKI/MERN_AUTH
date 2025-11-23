@@ -7,18 +7,14 @@ export const register = async (req, res) => {
   const { name, email, password } = req.body; // destructure req body
 
   if (!name || !email || !password) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Incomplete Details' });
+    return res.json({ success: false, message: 'Incomplete Details' });
   } // condition for incomplete details
 
   try {
     const existingUser = await userModel.findOne({ email }); // find existing user
 
     if (existingUser) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'User already exists' });
+      return res.json({ success: false, message: 'User already exists' });
     } // condition for existing user
 
     const hashedPassword = await bcrypt.hash(password, 10); // create hashed password
@@ -47,9 +43,9 @@ export const register = async (req, res) => {
 
     await transporter.sendMail(mailOptions); // sending mail
 
-    return res.status(201).json({ success: true }); // send json response
+    return res.json({ success: true }); // send json response
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.json({ success: false, message: error.message });
   }
 }; // controller for registration
 
@@ -57,7 +53,7 @@ export const login = async (req, res) => {
   const { email, password } = req.body; // destructure req body
 
   if (!email || !password) {
-    return res.status(400).json({
+    return res.json({
       success: false,
       message: 'Email and Password are required',
     });
@@ -67,15 +63,13 @@ export const login = async (req, res) => {
     const user = await userModel.findOne({ email }); // find the user
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid email' });
+      return res.json({ success: false, message: 'Invalid email' });
     } // condition for the user
 
     const isMatch = await bcrypt.compare(password, user.password); // compare password
 
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ success: false, message: 'Invalid password' });
+      return res.json({ success: false, message: 'Invalid password' });
     } // condition for the password
 
     // if email and password existed, then user should assigned token
@@ -84,7 +78,6 @@ export const login = async (req, res) => {
     }); // generate token
 
     res
-      .status(200)
       .cookie('token', token, {
         httpOnly: true, // accept http request only
         secure: process.env.NODE_ENV === 'production', // true https, false http
@@ -93,14 +86,13 @@ export const login = async (req, res) => {
       }) // generate cookie and send it to response
       .json({ success: true }); // successful response
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.json({ success: false, message: error.message });
   }
 }; // controller for login
 
 export const logout = async (req, res) => {
   try {
     res
-      .status(204)
       .clearCookie('token', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
@@ -109,7 +101,7 @@ export const logout = async (req, res) => {
       })
       .json({ success: true, message: 'Logged Out' }); // success response
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.json({ success: false, message: error.message });
   }
 }; // controller for logout
 
@@ -120,9 +112,10 @@ export const sendVerifyOtp = async (req, res) => {
     const existingUser = await userModel.findById(userId); // find user by id
 
     if (existingUser.isAccountVerified) {
-      return res
-        .status(409)
-        .json({ success: false, message: 'Account is already verified' });
+      return res.json({
+        success: false,
+        message: 'Account is already verified',
+      });
     } // condition for verified account
 
     const otp = String(Math.floor(Math.random() * 1000000));
@@ -141,11 +134,9 @@ export const sendVerifyOtp = async (req, res) => {
 
     await transporter.sendMail(mailOptions); // send the mail
 
-    res
-      .status(200)
-      .json({ success: true, message: 'Verification OTP send on mail' });
+    res.json({ success: true, message: 'Verification OTP send on mail' });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.json({ success: false, message: error.message });
   }
 }; // controller for sending verified otp
 
@@ -153,25 +144,21 @@ export const verifyEmail = async (req, res) => {
   const { userId, otp } = req.body; // destructure user id
 
   if (!userId || !otp) {
-    res.status(400).json({ success: false, message: 'Missing Details' });
+    res.json({ success: false, message: 'Missing Details' });
   } // condition for incomplete details
   try {
     const existingUser = await userModel.findById(userId); // find user by id
 
     if (!existingUser) {
-      return res
-        .status(404)
-        .json({ success: false, message: 'User is not found' });
+      return res.json({ success: false, message: 'User is not found' });
     } // condition for exisiting user not available
 
     if (existingUser.verifyOtp === '' || existingUser.verifyOtp !== otp) {
-      return res.status(401).json({ success: false, message: 'Invalid OTP' });
+      return res.json({ success: false, message: 'Invalid OTP' });
     } // condition for user otp
 
     if (existingUser.verifyOtpExpireAt < Date.now()) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'OTP is expired' });
+      return res.json({ success: false, message: 'OTP is expired' });
     } // condition for otp expiry
 
     existingUser.isAccountVerified = true;
@@ -179,19 +166,17 @@ export const verifyEmail = async (req, res) => {
     existingUser.verifyOtpExpireAt = 0;
 
     await existingUser.save(); // save user to database
-    return res
-      .status(200)
-      .json({ success: true, message: 'Email verified successfully' });
+    return res.json({ success: true, message: 'Email verified successfully' });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.json({ success: false, message: error.message });
   }
 }; // controller for verify Email
 
 export const isAuthenticated = async (req, res) => {
   try {
-    return res.status(200).json({ success: true });
+    return res.json({ success: true });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.json({ success: false, message: error.message });
   }
 }; // controller for checking user authentication
 
@@ -199,18 +184,14 @@ export const sendResetOtp = async (req, res) => {
   const { email } = req.body; // destructur email
 
   if (!email) {
-    return res
-      .status(400)
-      .json({ success: false, message: 'Email is required' });
+    return res.json({ success: false, message: 'Email is required' });
   } // condition if email not found
 
   try {
     const existingUser = await userModel.findOne({ email }); // find user
 
     if (!existingUser) {
-      return res
-        .status(400)
-        .json({ success: false, messaage: 'User not found' });
+      return res.json({ success: false, messaage: 'User not found' });
     } // condition for no existing user
 
     const otp = String(Math.ceil(Math.random() * 1000000)); // create otp
@@ -229,11 +210,9 @@ export const sendResetOtp = async (req, res) => {
 
     await transporter.sendMail(mailOptions); // send mail
 
-    return res
-      .status(200)
-      .json({ success: true, message: 'OTP send to your mail' });
+    return res.json({ success: true, message: 'OTP send to your mail' });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.json({ success: false, message: error.message });
   }
 }; // controller for password reset otp
 
@@ -241,7 +220,7 @@ export const resetPassword = async (req, res) => {
   const { email, otp, newPassword } = req.body; // destructre email, otp and new password
 
   if (!email || !otp || !newPassword) {
-    return res.status(400).json({
+    return res.json({
       success: false,
       message: 'Email, OTP and New Password are required',
     });
@@ -251,19 +230,15 @@ export const resetPassword = async (req, res) => {
     const existingUser = await userModel.findOne({ email }); // find user
 
     if (!existingUser) {
-      return res
-        .status(400)
-        .json({ success: false, message: 'User not found' });
+      return res.json({ success: false, message: 'User not found' });
     } // condition for user not found
 
     if (existingUser.resetOtp === '' || existingUser.resetOtp !== otp) {
-      return res.status(401).json({ success: false, message: 'Invalid OTP' });
+      return res.json({ success: false, message: 'Invalid OTP' });
     } // condition for invalid otp
 
     if (existingUser.resetOtpExpireAt < Date.now()) {
-      return res
-        .status(401)
-        .json({ success: false, message: 'OTP is expired' });
+      return res.json({ success: false, message: 'OTP is expired' });
     } // condition for invalid expiry otp
 
     const hashedNewPassword = await bcrypt.hash(newPassword, 10); // hashed password
@@ -274,10 +249,11 @@ export const resetPassword = async (req, res) => {
 
     await existingUser.save(); // save to database
 
-    return res
-      .status(200)
-      .json({ success: true, message: 'Password has been reset successfully' });
+    return res.json({
+      success: true,
+      message: 'Password has been reset successfully',
+    });
   } catch (error) {
-    return res.status(500).json({ success: false, message: error.message });
+    return res.json({ success: false, message: error.message });
   }
 }; // controller for resetting password
