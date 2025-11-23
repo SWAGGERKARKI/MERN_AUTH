@@ -3,16 +3,17 @@ import { assets } from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
 import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const Login = () => {
-  const [login, setLogin] = useState(false);
+  const [login, setLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
   });
   const navigate = useNavigate();
-  const { backendUrl } = useContext(AppContext);
+  const { backendUrl, setIsLoggedIn, getUserData } = useContext(AppContext);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,16 +23,50 @@ const Login = () => {
   const onSubmitHandler = async (e) => {
     try {
       e.preventDefault();
+      axios.defaults.withCredentials = true; // to send cookies with api request
+
       if (login) {
-        console.log('login data submission', formData);
+        const { data } = await axios.post(backendUrl + '/api/auth/login', {
+          email: formData.email,
+          password: formData.password,
+        });
+
+        console.log(data);
+
+        if (data.success) {
+          data?.message
+            ? console.log(data.message)
+            : console.log('user login success');
+          toast.success(data.message);
+          setIsLoggedIn(true);
+          getUserData();
+          navigate('/');
+        } else {
+          console.log('user login failed');
+          toast.error(data.message);
+        }
       } else {
         console.log('sign up data submission', formData);
-        const res = await axios.post(
+        const { data } = await axios.post(
           backendUrl + '/api/auth/register',
           formData
         );
+
+        if (data.success) {
+          data.message
+            ? console.log(data.message)
+            : console.log('user registeration success');
+          toast.success(data.message);
+          setIsLoggedIn(true);
+          navigate('/');
+        } else {
+          console.log('user registration failed');
+          toast.error(data.message);
+        }
       }
-    } catch (error) {}
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   return (
