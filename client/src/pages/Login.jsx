@@ -49,7 +49,7 @@ const Login = () => {
         console.log('sign up data submission', formData);
         const { data } = await axios.post(
           backendUrl + '/api/auth/register',
-          formData
+          formData,
         );
 
         if (data.success) {
@@ -70,7 +70,7 @@ const Login = () => {
   };
 
   return (
-    <div className="border border-red-500 flex justify-center items-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-200 to-purple-400">
+    <div className="border flex justify-center items-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-200 to-purple-400">
       <img
         src={assets.logo}
         alt="logo"
