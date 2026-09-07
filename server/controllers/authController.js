@@ -107,7 +107,7 @@ export const logout = async (req, res) => {
 
 export const sendVerifyOtp = async (req, res) => {
   try {
-    const { userId } = req.body; // destructure request body
+    const { userId } = req; // destructure request body
 
     const existingUser = await userModel.findById(userId); // find user by id
 
@@ -141,7 +141,8 @@ export const sendVerifyOtp = async (req, res) => {
 }; // controller for sending verified otp
 
 export const verifyEmail = async (req, res) => {
-  const { userId, otp } = req.body; // destructure user id
+  const { userId } = req; // destructure user id
+  const { otp } = req.body; // destructure otp
 
   if (!userId || !otp) {
     res.json({ success: false, message: 'Missing Details' });

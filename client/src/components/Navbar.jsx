@@ -2,6 +2,8 @@ import React, { useContext } from 'react';
 import { assets } from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
 import { AppContext } from '../context/AppContext';
+import { toast } from 'react-toastify';
+import axios from 'axios';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -9,33 +11,30 @@ const Navbar = () => {
   const { userData, backendUrl, setUserData, setIsLoggedIn } =
     useContext(AppContext);
 
-  // function to send verification otp mail and redirect the user to email verification page
+  // function to call the verify mail api and redirect to email verification page
   const sendVerificationOtp = async () => {
     try {
       // send cookies
       axios.defaults.withCredentials = true;
-      // api call on sendVerificationOtp api endpoints created in backend
+      // api call on sendVerificationOtp api endpoint created at backend
       const { data } = await axios.post(
-        backendUrl + 'api/auth/send-verify-otp',
+        backendUrl + '/api/auth/send-verify-otp',
       );
       // check response
       if (data.success) {
-        // if the success is true otp mail is already sent
-        // we have to navigate user to verify email page
+        // if success is true verification otp is already sent
+        // we have to navigate user to verify otp page
         navigate('/email-verify');
-        // after this display notification
+        // display success notification
         toast.success(data.message);
       } else {
+        // dispaly error notification from response
         toast.error(data.message);
       }
     } catch (error) {
+      // display error message while occuring error in response
       toast.error(error.message);
     }
-  };
-
-  // function to call the verify mail api and redirect to email verification page
-  const protoSendVerifyMail = () => {
-    navigate();
   };
 
   return (
@@ -48,7 +47,7 @@ const Navbar = () => {
           <div className="absolute top-0 right-0 pt-10 hidden group-hover:block text-black">
             <ul className="list-none m-0 bg-gray-50 text-sm rounded z-10">
               <li
-                onClick={() => navigate('/email-verify')}
+                onClick={sendVerificationOtp}
                 className="py-1 px-2 hover:bg-gray-200 cursor-pointer rounded text-nowrap"
               >
                 Verify Email

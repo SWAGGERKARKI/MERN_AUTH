@@ -1,12 +1,22 @@
-import React, { useRef } from 'react';
+import React, { useContext, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { assets } from '../assets/assets';
+import axios from 'axios';
+import { AppContext } from '../context/AppContext';
+import { toast } from 'react-toastify';
 
 const EmailVerify = () => {
   const navigate = useNavigate();
 
   // to target the input field
   const inputRefs = useRef([]);
+
+  // before api call send cookies
+  // axios.defaults.withCredentials = true;
+
+  // import app context items
+  const { backendUrl, isLoggedIn, userData, getUserData } =
+    useContext(AppContext);
 
   // define inputHandle function for moving to next input after entering the current input
   const handleInput = (e, i) => {
@@ -18,11 +28,10 @@ const EmailVerify = () => {
 
   // function to handle backspace key
   const handleKeyDown = (e, i) => {
-    console.log(e.key);
     if (e.key === 'Backspace' && e.target.value === '' && i > 0) {
       inputRefs.current[i - 1].focus();
     } else if (e.key === 'ArrowRight' && i < inputRefs.current.length - 1) {
-      console.log(inputRefs.current[i + 1].focus());
+      inputRefs.current[i + 1].focus();
     } else if (e.key === 'ArrowLeft' && i > 0) {
       inputRefs.current[i - 1].focus();
     }
@@ -42,6 +51,15 @@ const EmailVerify = () => {
       }
     });
   };
+
+  // function to handle submit
+  // const onSubmitHandler = async () => {
+  //   // to call api try catch handler
+  //   try {
+  //     // prevent default reload when we submit the page
+  //     e.preventDefault();
+  //   } catch (error) {}
+  // };
 
   return (
     <div className="flex justify-center items-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-200 to-purple-400">
@@ -68,6 +86,7 @@ const EmailVerify = () => {
                 maxLength={1}
                 className="p-4 w-12 bg-[#333A5C] text-center text-white text-xl rounded-md outline-none"
                 key={i}
+                // this code saves each input box into an array
                 ref={(e) => (inputRefs.current[i] = e)}
                 onInput={(e) => handleInput(e, i)}
                 onKeyDown={(e) => handleKeyDown(e, i)}
@@ -76,7 +95,36 @@ const EmailVerify = () => {
         </div>
         {/* button to submit the form */}
         <button
-          onClick={() => alert('submit the code')}
+          onClick={async (e) => {
+            e.preventDefault();
+            alert('submit the code');
+            const otpArray = inputRefs.current.map((e) => e.value);
+            const otp = otpArray.join('');
+
+            try {
+              // api call to verify otp
+              // first send cookies
+              axios.defaults.withCredentials = true;
+              // import some app context in the main function
+              // then call the api
+              const { data } = await axios.post(
+                backendUrl + '/api/auth/verify-account',
+                { otp },
+              );
+
+              // check response
+              if (data.success) {
+                // show success message from response
+                toast.success(data.message);
+              } else {
+                // show error message from response
+                toast.error(data.message);
+              }
+            } catch (error) {
+              // show error message regarding not responding
+              toast.error(error.message);
+            }
+          }}
           className="w-full text-white py-3 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 cursor-pointer"
         >
           Verify Email
