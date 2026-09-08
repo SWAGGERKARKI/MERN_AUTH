@@ -46,13 +46,18 @@ const Navbar = () => {
           {userData.name[0].toUpperCase()}
           <div className="absolute top-0 right-0 pt-10 hidden group-hover:block text-black">
             <ul className="list-none m-0 bg-gray-50 text-sm rounded z-10">
+              {!userData.isAccountVerified && (
+                <li
+                  onClick={sendVerificationOtp}
+                  className="py-1 px-2 hover:bg-gray-200 cursor-pointer rounded text-nowrap"
+                >
+                  Verify Email
+                </li>
+              )}
               <li
-                onClick={sendVerificationOtp}
-                className="py-1 px-2 hover:bg-gray-200 cursor-pointer rounded text-nowrap"
+                onClick={() => navigate('/login')}
+                className="py-1 px-2 hover:bg-gray-200 cursor-pointer rounded"
               >
-                Verify Email
-              </li>
-              <li className="py-1 px-2 hover:bg-gray-200 cursor-pointer rounded">
                 Logout
               </li>
             </ul>

@@ -1,4 +1,4 @@
-import React, { useContext, useRef } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { assets } from '../assets/assets';
 import axios from 'axios';
@@ -53,13 +53,46 @@ const EmailVerify = () => {
   };
 
   // function to handle submit
-  // const onSubmitHandler = async () => {
-  //   // to call api try catch handler
-  //   try {
-  //     // prevent default reload when we submit the page
-  //     e.preventDefault();
-  //   } catch (error) {}
-  // };
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
+    alert('submit the code');
+    const otpArray = inputRefs.current.map((e) => e.value);
+    const otp = otpArray.join('');
+
+    try {
+      // api call to verify otp
+      // first send cookies
+      axios.defaults.withCredentials = true;
+      // import some app context in the main function
+      // then call the api
+      const { data } = await axios.post(
+        backendUrl + '/api/auth/verify-account',
+        { otp },
+      );
+
+      // check response
+      if (data.success) {
+        // show success message from response
+        toast.success(data.message);
+        // get user information from the database
+        // function to get the user data
+        getUserData();
+        // navigate to home page
+        navigate('/');
+      } else {
+        // show error message from response
+        toast.error(data.message);
+      }
+    } catch (error) {
+      // show error message regarding not responding
+      toast.error(error.message);
+    }
+  };
+
+  // checks if the account is verified or not
+  useEffect(() => {
+    isLoggedIn && userData && userData.isAccountVerified && navigate('/');
+  }, [isLoggedIn, userData]);
 
   return (
     <div className="flex justify-center items-center min-h-screen px-6 sm:px-0 bg-gradient-to-br from-blue-200 to-purple-400">
@@ -69,7 +102,10 @@ const EmailVerify = () => {
         className="absolute left-4 sm:left-20 top-5 w-28 sm:w-32 cursor-pointer"
         onClick={() => navigate('/')}
       />
-      <form className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm">
+      <form
+        onSubmit={onSubmitHandler}
+        className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+      >
         <h1 className="text-white text-2xl font-semibold text-center m-4">
           Email Verify OTP
         </h1>
@@ -94,39 +130,7 @@ const EmailVerify = () => {
             ))}
         </div>
         {/* button to submit the form */}
-        <button
-          onClick={async (e) => {
-            e.preventDefault();
-            alert('submit the code');
-            const otpArray = inputRefs.current.map((e) => e.value);
-            const otp = otpArray.join('');
-
-            try {
-              // api call to verify otp
-              // first send cookies
-              axios.defaults.withCredentials = true;
-              // import some app context in the main function
-              // then call the api
-              const { data } = await axios.post(
-                backendUrl + '/api/auth/verify-account',
-                { otp },
-              );
-
-              // check response
-              if (data.success) {
-                // show success message from response
-                toast.success(data.message);
-              } else {
-                // show error message from response
-                toast.error(data.message);
-              }
-            } catch (error) {
-              // show error message regarding not responding
-              toast.error(error.message);
-            }
-          }}
-          className="w-full text-white py-3 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 cursor-pointer"
-        >
+        <button className="w-full text-white py-3 rounded-full bg-gradient-to-r from-indigo-500 to-indigo-900 cursor-pointer">
           Verify Email
         </button>
       </form>
