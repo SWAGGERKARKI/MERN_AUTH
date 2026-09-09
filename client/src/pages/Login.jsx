@@ -31,18 +31,12 @@ const Login = () => {
           password: formData.password,
         });
 
-        console.log(data);
-
         if (data.success) {
-          data?.message
-            ? console.log(data.message)
-            : console.log('user login success');
           toast.success(data.message);
           setIsLoggedIn(true);
           getUserData();
           navigate('/');
         } else {
-          console.log('user login failed');
           toast.error(data.message);
         }
       } else {
