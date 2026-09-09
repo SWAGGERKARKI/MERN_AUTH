@@ -37,6 +37,11 @@ const Navbar = () => {
     }
   };
 
+  const logout = () => {
+    setUserData(false);
+    setIsLoggedIn(false);
+  };
+
   return (
     <div className="w-full flex justify-between items-center p-4 sm:p-6 sm:px-24 absolute top-0 ">
       <img src={assets.logo} alt="logo" className="w-28 sm:w-32" />
@@ -55,7 +60,7 @@ const Navbar = () => {
                 </li>
               )}
               <li
-                onClick={() => navigate('/login')}
+                onClick={logout}
                 className="py-1 px-2 hover:bg-gray-200 cursor-pointer rounded"
               >
                 Logout
