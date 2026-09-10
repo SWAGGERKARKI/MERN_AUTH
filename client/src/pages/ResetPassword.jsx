@@ -1,11 +1,23 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { assets } from '../assets/assets';
 import { useNavigate } from 'react-router-dom';
+import { AppContext } from '../context/AppContext';
+import axios from 'axios';
+import { toast } from 'react-toastify';
 
 const ResetPassword = () => {
   const navigate = useNavigate();
-  const [email, setEmail] = useState('');
+
+  const [email, setEmail] = useState('swaggerkarki@gmail.com');
   const [newPassword, setNewPassword] = useState('');
+  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [isOtpSubmitted, setIsOtpSubmitted] = useState(false);
+
+  // import app context items
+  const { backendUrl } = useContext(AppContext);
+  // allow cookies to send
+  axios.defaults.withCredentials = true;
 
   // to target the input field
   const inputRefs = useRef([]);
@@ -54,8 +66,35 @@ const ResetPassword = () => {
       />
 
       {/* form to submit for forget password */}
-      {!email && !newPassword && (
-        <form className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm">
+      {!isEmailSent && (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            // call api endpoint to sent the opt to the mail
+            try {
+              // call reset password api endpoint
+              const { data } = await axios.post(
+                backendUrl + '/api/auth/send-reset-otp',
+                { email },
+              );
+              console.log('send otp', data);
+              // check response
+              if (data.success) {
+                // change the state variable true
+                setIsEmailSent(true);
+                // notify user
+                toast.success(data.message);
+              } else {
+                // notify user
+                toast.error(data.message);
+              }
+            } catch (error) {
+              // notify user of fetching response error
+              toast.error(error.message);
+            }
+          }}
+          className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+        >
           <h1 className="text-white text-2xl font-semibold text-center m-4">
             Reset Password
           </h1>
@@ -80,10 +119,19 @@ const ResetPassword = () => {
       )}
 
       {/* otp form */}
-      {email && (
+      {isEmailSent && !otp && (
         <form
           // onSubmit={onSubmitHandler}
           className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+          onSubmit={async (e) => {
+            e.preventDefault();
+            console.log(inputRefs.current);
+            // take otp from inputref
+            const otpArray = inputRefs.current.map((e) => e.value);
+            // convert otp array into otp string and save to otp
+            setOtp(otpArray.join(''));
+            setIsOtpSubmitted(true);
+          }}
         >
           <h1 className="text-white text-2xl font-semibold text-center m-4">
             Reset Password OTP
@@ -102,7 +150,7 @@ const ResetPassword = () => {
                   className="p-4 w-12 bg-[#333A5C] text-center text-white text-xl rounded-md outline-none"
                   key={i}
                   // this code saves each input box into an array
-                  // ref={(e) => (inputRefs.current[i] = e)}
+                  ref={(e) => (inputRefs.current[i] = e)}
                   onInput={(e) => handleInput(e, i)}
                   onKeyDown={(e) => handleKeyDown(e, i)}
                 />
@@ -116,8 +164,38 @@ const ResetPassword = () => {
       )}
 
       {/* new password form */}
-      {email && newPassword && (
-        <form className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm">
+      {isEmailSent && isOtpSubmitted && (
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            // call api to set new password
+            try {
+              // call reset password endpoint
+              console.log(email);
+              console.log(otp);
+              console.log(newPassword);
+              const { data } = await axios.post(
+                backendUrl + '/api/auth/reset-password',
+                {
+                  email,
+                  otp,
+                  newPassword,
+                },
+              );
+              // check response and notify users
+              if (data.success) {
+                toast.success(data.message);
+                navigate('/login');
+              } else {
+                toast.error(data.message);
+              }
+            } catch (error) {
+              // notify if respoinding error
+              toast.error(error.message);
+            }
+          }}
+          className="bg-slate-900 p-8 rounded-lg shadow-lg w-96 text-sm"
+        >
           <h1 className="text-white text-2xl font-semibold text-center m-4">
             New Password
           </h1>
